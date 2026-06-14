@@ -1,0 +1,27 @@
+name: churn_ml_env001
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - scipy
+  - scikit-learn
+  - matplotlib
+  - plotly
+  - ipykernel
+  - jupyterlab
+  - fastapi
+  - uvicorn
+  - pydantic
+  - shap
+  - optuna
+  - great-expectations
+  - pytest
+  - python-dotenv
+  - joblib
+  - pyarrow
+  - pip
+  - pip:
+      - xgboost-cu13
+      - kaleido>=0.2.1
