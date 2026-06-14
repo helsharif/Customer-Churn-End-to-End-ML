@@ -55,6 +55,9 @@ EXPECTED_RAW_COLUMNS = {
 LEAKAGE_AND_ID_COLUMNS = [
     "CustomerID",
     "Count",
+    "Lat Long",
+    "Latitude",
+    "Longitude",
     "Churn Label",
     "Churn Value",
     "Churn Score",
@@ -65,6 +68,9 @@ LEAKAGE_AND_ID_COLUMNS = [
 STANDARDIZED_LEAKAGE_AND_ID_COLUMNS = [
     "customer_id",
     "count",
+    "lat_long",
+    "latitude",
+    "longitude",
     "churn_label",
     "churn_value",
     "churn_score",

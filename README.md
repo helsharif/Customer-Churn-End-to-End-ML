@@ -32,6 +32,9 @@ The following fields are treated as non-feature or leakage columns by default:
 
 - `CustomerID`
 - `Count`
+- `Lat Long`
+- `Latitude`
+- `Longitude`
 - `Churn Label`
 - `Churn Value`
 - `Churn Score`
@@ -40,6 +43,8 @@ The following fields are treated as non-feature or leakage columns by default:
 - Other direct churn explanation or post-outcome fields, if introduced later
 
 `Churn Score`, `Churn Reason`, and churn-category fields may contain information generated after or directly because of the churn event. They should only be used in clearly separated leakage analysis or business interpretation sections, not in model training features.
+
+Latitude and longitude fields are also excluded from the default feature set. They may be useful for geographic analysis, but the first modeling pass will avoid raw coordinates to reduce the risk of location memorization and overly local patterns.
 
 ## Planned Workflow
 
