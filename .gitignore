@@ -186,6 +186,7 @@ data/interim/*
 data/processed/*
 data/external/*
 !data/raw/.gitkeep
+!data/raw/Telco_customer_churn.csv
 !data/interim/.gitkeep
 !data/processed/.gitkeep
 !data/external/.gitkeep
