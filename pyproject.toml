@@ -27,6 +27,7 @@ dependencies = [
   "python-dotenv",
   "joblib",
   "pyarrow",
+  "xgboost",
 ]
 
 [project.optional-dependencies]

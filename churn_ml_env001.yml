@@ -21,7 +21,7 @@ dependencies:
   - python-dotenv
   - joblib
   - pyarrow
+  - xgboost
   - pip
   - pip:
-      - xgboost-cu13
       - kaleido>=0.2.1

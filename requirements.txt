@@ -16,5 +16,5 @@ pytest
 python-dotenv
 joblib
 pyarrow
-xgboost-cu13
+xgboost
 kaleido>=0.2.1

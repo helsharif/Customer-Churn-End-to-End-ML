@@ -105,7 +105,7 @@ The repository includes a minimal FastAPI application as the starting point for 
 - Python 3.12
 - pandas, NumPy, SciPy
 - scikit-learn
-- XGBoost with CUDA package option
+- XGBoost
 - Optuna
 - SHAP
 - Plotly, Matplotlib, Kaleido
@@ -169,6 +169,8 @@ Then open:
 http://127.0.0.1:8000/health
 ```
 
-## GPU XGBoost Note
+## XGBoost and GPU Note
 
-The conda environment installs `xgboost-cu13` through pip for CUDA-enabled XGBoost. GPU support depends on a compatible NVIDIA driver, CUDA runtime compatibility, Python wheel availability, and Windows environment configuration. If GPU installation is not available on a machine, replace `xgboost-cu13` with the standard `xgboost` package for CPU-based development.
+The default conda environment installs standard CPU-compatible `xgboost` from conda-forge so the Windows setup is reliable. GPU-enabled XGBoost can be explored later as an optional optimization after the baseline workflow is stable.
+
+If you want to experiment with CUDA XGBoost, first confirm that your NVIDIA driver, CUDA runtime, Python version, and the package wheel all match. Avoid making GPU XGBoost a required environment dependency unless the install path is proven on the target machine.
