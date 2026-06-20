@@ -69,16 +69,22 @@ Customer-Churn-End-to-End-ML/
 ├── churn_ml_env001.yml
 ├── requirements.txt
 ├── pyproject.toml
+├── app/                       # Application entry points and serving assets
+├── artifacts/                 # Saved models, metrics, and generated outputs
+├── config/                    # Project and experiment configuration
 ├── data/
 │   ├── raw/
 │   ├── interim/
-│   ├── processed/
-│   └── external/
+│   └── processed/
+├── docker/                    # Containerization resources
+├── great_expectations/        # Data-quality configuration and expectation suites
+├── mlruns/                    # Local MLflow experiment tracking data
 ├── notebooks/
 │   ├── 01_eda.ipynb
 │   ├── 02_data_cleaning.ipynb
 │   ├── 03_baseline_modeling.ipynb
 │   └── 04_model_selection.ipynb
+├── scripts/                   # Runnable project automation scripts
 ├── src/churn_ml/
 │   ├── config.py
 │   ├── data/
@@ -86,8 +92,6 @@ Customer-Churn-End-to-End-ML/
 │   ├── models/
 │   ├── explainability/
 │   └── api/
-├── reports/
-├── models/
 ├── tests/
 └── .github/workflows/
 ```
