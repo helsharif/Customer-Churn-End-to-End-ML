@@ -180,16 +180,7 @@ secrets/
 # notes folder
 notes/
 
-# Project data and generated artifacts
-data/raw/*
-data/interim/*
-data/processed/*
-data/external/*
-!data/raw/.gitkeep
-!data/raw/Telco_customer_churn.csv
-!data/interim/.gitkeep
-!data/processed/.gitkeep
-!data/external/.gitkeep
+# Generated artifacts
 models/*
 !models/.gitkeep
 reports/figures/*

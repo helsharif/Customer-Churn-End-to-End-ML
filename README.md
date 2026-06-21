@@ -48,17 +48,16 @@ Latitude and longitude fields are also excluded from the default feature set. Th
 
 ## Planned Workflow
 
-1. Exploratory data analysis
-2. Data validation, ingestion, and cleaning
-3. Feature engineering and preprocessing
-4. Interpretable baseline modeling
-5. Model selection and training
-6. Hyperparameter tuning
-7. Model evaluation and error analysis
-8. Model explainability with SHAP
-9. FastAPI deployment path
-10. Monitoring and data quality checks
-11. CI/CD automation
+1. Exploratory data analysis, cleaning, and feature engineering
+2. Interpretable logistic-regression baseline
+3. XGBoost classification modeling
+4. Cross-validated model selection and holdout evaluation
+5. Hyperparameter tuning
+6. Model evaluation and error analysis
+7. Model explainability with SHAP
+8. FastAPI deployment path
+9. Monitoring and data quality checks
+10. CI/CD automation
 
 ## Repository Structure
 
@@ -73,16 +72,20 @@ Customer-Churn-End-to-End-ML/
 ├── artifacts/                 # Saved models, metrics, and generated outputs
 ├── config/                    # Project and experiment configuration
 ├── data/
-│   ├── raw/
-│   ├── interim/
-│   └── processed/
+│   ├── raw/                   # Source data and its original data dictionary
+│   ├── interim/               # Optional transient transformation outputs
+│   └── processed/             # Model-ready outputs created by Notebook 01
+│       ├── prediction_df_logistic_regression.csv
+│       ├── prediction_df_logistic_regression_data_dictionary.md
+│       ├── prediction_df_xgboost.csv
+│       └── prediction_df_xgboost_data_dictionary.md
 ├── docker/                    # Containerization resources
 ├── great_expectations/        # Data-quality configuration and expectation suites
 ├── mlruns/                    # Local MLflow experiment tracking data
 ├── notebooks/
-│   ├── 01_eda.ipynb
-│   ├── 02_data_cleaning.ipynb
-│   ├── 03_baseline_modeling.ipynb
+│   ├── 01_eda_data_cleaning.ipynb
+│   ├── 02_baseline_modeling_logistic_regression.ipynb
+│   ├── 03_xgboost_modeling.ipynb
 │   └── 04_model_selection.ipynb
 ├── scripts/                   # Runnable project automation scripts
 ├── src/churn_ml/
@@ -96,9 +99,11 @@ Customer-Churn-End-to-End-ML/
 └── .github/workflows/
 ```
 
-## Planned Modeling Approach
+## Modeling Notebook Flow
 
-Early modeling will prioritize interpretable baselines such as logistic regression with clear preprocessing. Later iterations will compare stronger models such as tree-based ensembles and GPU-enabled XGBoost, then use Optuna for tuning once the validation strategy and leakage controls are stable.
+Run the notebooks in numerical order. Notebook 01 produces the model-ready CSV and its field-level data dictionary. Notebooks 02 and 03 use the same stratified 80/20 holdout split for directly comparable logistic-regression and XGBoost results. Notebook 04 uses five-fold stratified cross-validation on the training split to select a candidate by PR AUC, then evaluates that selected candidate once on the untouched holdout set. Each modeling notebook defaults its prediction threshold to the training-set churn rate; set `CHURN_THRESHOLD` to a value from 0 to 1 to override it.
+
+Notebook 01 creates two model-ready datasets, each with 7,043 records and `Churn Value` as the final column. The logistic-regression dataset uses the multicollinearity-pruned predictors and excludes `Monthly Charges`. The XGBoost dataset retains the complete encoded predictor set because tree-based models are not sensitive to linear multicollinearity in the same way. Yes/no features are encoded as 0/1, categorical features with 3–5 levels are one-hot encoded, and the XGBoost dataset retains `Total_Charges_Missing` to record a blank source `Total Charges` value.
 
 ## Deployment and Monitoring Plan
 
@@ -120,9 +125,7 @@ The repository includes a minimal FastAPI application as the starting point for 
 
 ## Current Status
 
-Phase 1 is a repository and environment scaffold. The project currently includes starter documentation, package structure, a minimal data loading and cleaning layer, a placeholder baseline training pipeline, evaluation helpers, a FastAPI health check, and starter CI.
-
-No final model has been trained yet.
+The EDA/data-cleaning notebook produces a documented processed dataset. Dedicated notebooks now cover logistic-regression baseline modeling, XGBoost modeling, and cross-validated model selection. These notebooks establish the experiment workflow; tuned model artifacts and a production selection decision remain future work.
 
 ## Roadmap
 
