@@ -125,7 +125,13 @@ The repository includes a minimal FastAPI application as the starting point for 
 
 ## Current Status
 
-The EDA/data-cleaning notebook produces a documented processed dataset. Dedicated notebooks now cover logistic-regression baseline modeling, XGBoost modeling, and cross-validated model selection. These notebooks establish the experiment workflow; tuned model artifacts and a production selection decision remain future work.
+The EDA/data-cleaning notebook produces a documented processed dataset. Dedicated notebooks now cover logistic-regression baseline modeling, Optuna-tuned XGBoost modeling, and cross-validated model selection. The latest experiment results favor the tuned XGBoost model for the current retention-targeting scenario, while logistic regression remains a strong, practical alternative when transparency and implementation simplicity are the priority.
+
+## Current Model Selection
+
+The current recommendation is to select the Optuna-tuned XGBoost model for retention targeting. In the holdout scenario that targets the top 100 customers by expected value, XGBoost produced **$24,647.51** in expected net value, compared with **$23,555.11** for logistic regression—an improvement of **$1,092.40** (about **4.6%**). The two models selected 86 of the same 100 customers, so the incremental value is concentrated in a relatively small portion of the target list.
+
+This is a pragmatic rather than absolute choice. Logistic regression performed well and remains the preferred option where clearer explanations, simpler implementation, and easier auditing outweigh the incremental expected-value gain. The expected-value comparison depends on the assumed retention uplift and offer-acceptance rate; validate those assumptions with a controlled campaign before production deployment.
 
 ## Roadmap
 
@@ -134,7 +140,7 @@ The EDA/data-cleaning notebook produces a documented processed dataset. Dedicate
 - Build cleaned modeling dataset
 - Train and evaluate baseline logistic regression
 - Add model comparison experiments
-- Tune selected models with Optuna
+- Validate the selected model and retention assumptions with a controlled campaign
 - Add SHAP explanations and business-facing interpretation
 - Package inference pipeline
 - Add FastAPI prediction endpoint

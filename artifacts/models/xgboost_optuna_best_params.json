@@ -1,0 +1,15 @@
+{
+  "max_depth": 2,
+  "learning_rate": 0.07727996382298398,
+  "min_child_weight": 11.245397151116393,
+  "subsample": 0.7571151291441364,
+  "colsample_bytree": 0.8656061144813573,
+  "gamma": 0.3183422731622406,
+  "reg_alpha": 0.0022641337922232985,
+  "reg_lambda": 10.062249051348465,
+  "n_estimators": 179,
+  "scale_pos_weight_multiplier": 1.253709984977725,
+  "objective": "binary:logistic",
+  "eval_metric": "aucpr",
+  "cv_pr_auc": 0.6956123412739625
+}
