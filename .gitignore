@@ -187,6 +187,10 @@ reports/figures/*
 reports/metrics/*
 !reports/figures/.gitkeep
 !reports/metrics/.gitkeep
+mlflow.db*
+mlruns/
+artifacts/models/tabfm_checkpoint/
+artifacts/models/tabfm_pytorch_config.json
 
 # Environment and local configuration
 .env.*

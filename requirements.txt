@@ -17,4 +17,7 @@ python-dotenv
 joblib
 pyarrow
 xgboost
+tabfm[pytorch]==1.0.0
+safetensors
 kaleido>=0.2.1
+mlflow

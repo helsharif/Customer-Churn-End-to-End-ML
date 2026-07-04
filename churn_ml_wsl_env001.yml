@@ -1,4 +1,4 @@
-name: churn_ml_env001
+name: churn_ml_wsl_env001
 channels:
   - conda-forge
 dependencies:
@@ -10,6 +10,7 @@ dependencies:
   - matplotlib
   - plotly
   - ipykernel
+  - ipywidgets
   - jupyterlab
   - fastapi
   - uvicorn
@@ -24,9 +25,6 @@ dependencies:
   - xgboost
   - pip
   - pip:
-      - --extra-index-url https://download.pytorch.org/whl/cu128
-      - torch==2.11.0+cu128
-      - tabfm[pytorch]==1.0.0
-      - safetensors
+      - tabfm[jax,cuda]==1.0.0
       - kaleido>=0.2.1
       - mlflow==3.13.0

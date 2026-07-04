@@ -28,6 +28,9 @@ dependencies = [
   "joblib",
   "pyarrow",
   "xgboost",
+  "tabfm[pytorch]==1.0.0",
+  "safetensors",
+  "mlflow",
 ]
 
 [project.optional-dependencies]

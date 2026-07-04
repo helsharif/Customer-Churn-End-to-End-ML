@@ -51,8 +51,8 @@ Latitude and longitude fields are also excluded from the default feature set. Th
 1. Exploratory data analysis, cleaning, and feature engineering
 2. Interpretable logistic-regression baseline
 3. XGBoost classification modeling
-4. Cross-validated model selection and holdout evaluation
-5. Hyperparameter tuning
+4. TabFM zero-shot classification modeling
+5. Cross-validated model selection and holdout evaluation
 6. Model evaluation and error analysis
 7. Model explainability with SHAP
 8. FastAPI deployment path
@@ -66,6 +66,7 @@ Customer-Churn-End-to-End-ML/
 ├── README.md
 ├── .gitignore
 ├── churn_ml_env001.yml
+├── churn_ml_wsl_env001.yml
 ├── requirements.txt
 ├── pyproject.toml
 ├── app/                       # Application entry points and serving assets
@@ -81,12 +82,14 @@ Customer-Churn-End-to-End-ML/
 │       └── prediction_df_xgboost_data_dictionary.md
 ├── docker/                    # Containerization resources
 ├── great_expectations/        # Data-quality configuration and expectation suites
-├── mlruns/                    # Local MLflow experiment tracking data
+├── mlruns/                    # Local MLflow artifact files
 ├── notebooks/
 │   ├── 01_eda_data_cleaning.ipynb
 │   ├── 02_baseline_modeling_logistic_regression.ipynb
 │   ├── 03_xgboost_modeling.ipynb
-│   └── 04_model_selection.ipynb
+│   ├── 04a_tabFM_modeling.ipynb
+│   ├── 04b_tabFM_JAX_modeling.ipynb
+│   └── 05_model_selection.ipynb
 ├── scripts/                   # Runnable project automation scripts
 ├── src/churn_ml/
 │   ├── config.py
@@ -101,9 +104,15 @@ Customer-Churn-End-to-End-ML/
 
 ## Modeling Notebook Flow
 
-Run the notebooks in numerical order. Notebook 01 produces the model-ready CSV and its field-level data dictionary. Notebooks 02 and 03 use the same stratified 80/20 holdout split for directly comparable logistic-regression and XGBoost results. Notebook 04 uses five-fold stratified cross-validation on the training split to select a candidate by PR AUC, then evaluates that selected candidate once on the untouched holdout set. Each modeling notebook defaults its prediction threshold to the training-set churn rate; set `CHURN_THRESHOLD` to a value from 0 to 1 to override it.
+Run the notebooks in numerical order. Notebook 01 produces the model-ready CSV and its field-level data dictionary. Notebooks 02, 03, and 04 use the same stratified 80/20 holdout split for directly comparable logistic-regression, XGBoost, and TabFM results. Notebook 04 has separate PyTorch and JAX variants; `04a_tabFM_modeling.ipynb` is the GPU-backed TabFM candidate used for comparison, while `04b_tabFM_JAX_modeling.ipynb` is an optional WSL/JAX backend experiment. The JAX notebook defaults to CPU because the JAX/Orbax checkpoint restore exceeded the 8 GB VRAM available on the RTX 4060 Laptop GPU. Notebook 05 uses five-fold stratified cross-validation on the training split to select between the baseline, XGBoost, and PyTorch TabFM candidates by PR AUC, then evaluates the candidates once on the untouched holdout set. Each modeling notebook defaults its prediction threshold to the training-set churn rate; set `CHURN_THRESHOLD` to a value from 0 to 1 to override it.
 
-Notebook 01 creates two model-ready datasets, each with 7,043 records and `Churn Value` as the final column. The logistic-regression dataset uses the multicollinearity-pruned predictors and excludes `Monthly Charges`. The XGBoost dataset retains the complete encoded predictor set because tree-based models are not sensitive to linear multicollinearity in the same way. Yes/no features are encoded as 0/1, categorical features with 3–5 levels are one-hot encoded, and the XGBoost dataset retains `Total_Charges_Missing` to record a blank source `Total Charges` value.
+The selected PyTorch TabFM settings for model selection are `TABFM_N_ESTIMATORS = 8`, `TABFM_BATCH_SIZE = 1`, and `TABFM_MAX_CONTEXT_ROWS = 2048`. This run completed on the local CUDA GPU in about eight minutes for the single holdout evaluation in notebook 04a and produced holdout metrics of accuracy 0.7630, precision 0.5361, recall 0.7941, F1 0.6401, PR AUC 0.6781, and ROC AUC 0.8599. These settings improved the initial faster TabFM trial enough to justify using them in notebook 05, while avoiding further runtime expansion.
+
+Notebook 01 creates two model-ready datasets, each with 7,043 records and `Churn Value` as the final column. The logistic-regression dataset uses the multicollinearity-pruned predictors and excludes `Monthly Charges`. The XGBoost/TabFM dataset retains the complete encoded predictor set because these nonlinear models are not sensitive to linear multicollinearity in the way logistic regression is. Yes/no features are encoded as 0/1, categorical features with 3-5 levels are one-hot encoded, and the full-feature dataset retains `Total_Charges_Missing` to record a blank source `Total Charges` value.
+
+Notebooks 02, 03, 04, and 05 log lightweight experiment evidence to local MLflow tracking in `mlflow.db`, with local artifact files under `mlruns/`: parameters, metrics, comparison tables, and retention-targeting summaries. They do not log the TabFM checkpoint or model weights.
+
+For TabFM, add `HF_TOKEN` to the project-root `.env` file to authenticate Hugging Face downloads. Notebooks 04 and 05 load `.env` before requesting the TabFM checkpoint and only report whether a token is configured.
 
 ## Deployment and Monitoring Plan
 
@@ -115,9 +124,11 @@ The repository includes a minimal FastAPI application as the starting point for 
 - pandas, NumPy, SciPy
 - scikit-learn
 - XGBoost
+- TabFM with PyTorch/CUDA, plus optional WSL/JAX experimentation
 - Optuna
 - SHAP
 - Plotly, Matplotlib, Kaleido
+- MLflow
 - FastAPI, Uvicorn, Pydantic
 - Great Expectations
 - pytest
@@ -125,13 +136,37 @@ The repository includes a minimal FastAPI application as the starting point for 
 
 ## Current Status
 
-The EDA/data-cleaning notebook produces a documented processed dataset. Dedicated notebooks now cover logistic-regression baseline modeling, Optuna-tuned XGBoost modeling, and cross-validated model selection. The latest experiment results favor the tuned XGBoost model for the current retention-targeting scenario, while logistic regression remains a strong, practical alternative when transparency and implementation simplicity are the priority.
+The EDA/data-cleaning notebook produces a documented processed dataset. Dedicated notebooks now cover logistic-regression baseline modeling, Optuna-tuned XGBoost modeling, PyTorch/CUDA TabFM zero-shot modeling, optional JAX TabFM experimentation, and cross-validated model selection. Notebook 05 has been run with the stronger TabFM `8 / 1 / 2048` settings.
 
 ## Current Model Selection
 
-The current recommendation is to select the Optuna-tuned XGBoost model for retention targeting. In the holdout scenario that targets the top 100 customers by expected value, XGBoost produced **$24,647.51** in expected net value, compared with **$23,555.11** for logistic regression—an improvement of **$1,092.40** (about **4.6%**). The two models selected 86 of the same 100 customers, so the incremental value is concentrated in a relatively small portion of the target list.
+The current practical recommendation is to select the Optuna-tuned XGBoost model for the retention-targeting workflow. In notebook 05, PyTorch/CUDA TabFM had the strongest conventional predictive metrics with mean CV PR AUC 0.6971, holdout PR AUC 0.6781, and holdout ROC AUC 0.8599. XGBoost was very close predictively, with mean CV PR AUC 0.6932, holdout PR AUC 0.6725, and holdout ROC AUC 0.8559, but it produced the highest top-100 campaign expected net value: **$24,647.51** for XGBoost versus **$23,555.11** for logistic regression and **$16,017.86** for TabFM.
 
-This is a pragmatic rather than absolute choice. Logistic regression performed well and remains the preferred option where clearer explanations, simpler implementation, and easier auditing outweigh the incremental expected-value gain. The expected-value comparison depends on the assumed retention uplift and offer-acceptance rate; validate those assumptions with a controlled campaign before production deployment.
+This is not a contradiction: PR AUC and ROC AUC measure aggregate ranking quality, while the campaign calculation is value-weighted and cost-sensitive. TabFM selected a materially different top-100 target list, overlapping XGBoost on 75 customers, and that list was less valuable under the current churn-probability, retained-LTV, outreach-cost, offer-cost, offer-acceptance, and retention-uplift assumptions. TabFM also took substantially longer to run, especially in five-fold cross-validation, without improving the business objective. The expected-value comparison depends on the assumed retention uplift and offer-acceptance rate; validate those assumptions with a controlled campaign before production deployment.
+
+## Model Trade-Offs in This Project
+
+The three model families represent different practical choices. Logistic regression is the interpretable linear baseline, XGBoost is the tuned nonlinear tabular model, and TabFM is a pretrained tabular foundation model. In this churn project, the results favor XGBoost as the production candidate even though TabFM narrowly leads on several conventional predictive metrics.
+
+| Dimension            | Logistic Regression                              | XGBoost                                  | TabFM                                                         |
+| -------------------- | ------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------- |
+| Role in this project | Transparent baseline                             | Recommended practical model              | Foundation-model benchmark                                    |
+| Architecture         | Linear / parametric                              | Gradient-boosted decision trees          | Transformer-based tabular foundation model                    |
+| Training requirement | Required, very fast                              | Required, plus tuning                    | No local weight training, but repeated inference is expensive |
+| Feature interactions | Mostly manual                                    | Learned automatically                    | Learned through pretrained attention patterns                 |
+| Interpretability     | Strongest; coefficients are directly inspectable | Moderate; use SHAP or feature importance | Weakest; mostly black-box behavior                            |
+| Runtime profile      | Fastest                                          | Fast and production-friendly             | Slowest in this project, especially during cross-validation   |
+| Best project use     | Auditable benchmark and fallback                 | Retention campaign deployment candidate  | Experimental comparison and cold-start reference              |
+
+Logistic regression remains valuable because it is simple, auditable, and cheap to run. Its main weakness is that it only captures linear relationships unless interactions are manually engineered. In this project, it performed respectably, with holdout PR AUC 0.6393 and expected net value $23,555.11, but it trailed XGBoost on both predictive ranking and campaign value. It is still a good fallback when transparency, governance, or low-resource deployment matter more than incremental performance.
+
+XGBoost is the best fit for the current business objective. It captures nonlinear patterns and interactions in the encoded churn features, runs efficiently, and produced the best top-100 expected net value at $24,647.51. Its main cost is complexity: it required Optuna tuning, and explanations should use post-hoc tools such as SHAP rather than raw coefficients. For this project, that trade-off is worthwhile because XGBoost is nearly tied with TabFM on holdout PR AUC while being faster, simpler to operate, and better aligned with the retention-value calculation.
+
+TabFM is useful as a modern foundation-model benchmark, but it did not become the practical winner here. With the stronger PyTorch/CUDA settings, it produced the best mean CV PR AUC and the best holdout PR AUC, ROC AUC, precision, accuracy, and F1. However, it took much longer to run and produced the lowest campaign expected net value at $16,017.86. This happened because the business objective is value-weighted: the top customers are selected by predicted churn probability multiplied by retained-LTV value, not by generic classification rank alone. TabFM chose a different top-100 list, and that list was less profitable under the current cost assumptions.
+
+Some of TabFM's usual advantages were also not fully exercised in this project. TabFM can be attractive for rapid prototyping, cold-start tables, limited local labels, and tables with meaningful raw text fields. This churn workflow already had labels, a compact structured dataset, and a deliberate feature-engineering pipeline built for fair comparison with logistic regression and XGBoost. Because the project used encoded model-ready features rather than raw text-heavy tables, TabFM's foundation-model strengths had less room to shine.
+
+The practical rule from this project is: use logistic regression when interpretability is the deciding factor, use XGBoost for the current production-style retention workflow, and keep TabFM as a benchmark or exploratory option when zero-shot behavior, cold-start modeling, or text-rich tabular inputs are central to the problem.
 
 ## Roadmap
 
@@ -182,8 +217,12 @@ Then open:
 http://127.0.0.1:8000/health
 ```
 
-## XGBoost and GPU Note
+## GPU Notes
 
 The default conda environment installs standard CPU-compatible `xgboost` from conda-forge so the Windows setup is reliable. GPU-enabled XGBoost can be explored later as an optional optimization after the baseline workflow is stable.
 
 If you want to experiment with CUDA XGBoost, first confirm that your NVIDIA driver, CUDA runtime, Python version, and the package wheel all match. Avoid making GPU XGBoost a required environment dependency unless the install path is proven on the target machine.
+
+TabFM uses PyTorch with CUDA support in `churn_ml_env001`. The environment file pins the CUDA 12.8 PyTorch wheel source and `torch==2.11.0+cu128`, which has been verified on the local NVIDIA GeForce RTX 4060 Laptop GPU.
+
+For JAX GPU experiments, use WSL2 and `churn_ml_wsl_env001.yml`. Native Windows JAX is CPU-only, while the WSL environment installs TabFM with JAX/CUDA support and has been verified to see `CudaDevice(id=0)`.
