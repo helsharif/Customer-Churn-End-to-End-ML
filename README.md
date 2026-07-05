@@ -51,13 +51,12 @@ Latitude and longitude fields are also excluded from the default feature set. Th
 1. Exploratory data analysis, cleaning, and feature engineering
 2. Interpretable logistic-regression baseline
 3. XGBoost classification modeling
-4. TabFM zero-shot classification modeling
-5. Cross-validated model selection and holdout evaluation
-6. Model evaluation and error analysis
-7. Model explainability with SHAP
-8. FastAPI deployment path
-9. Monitoring and data quality checks
-10. CI/CD automation
+4. Logistic-regression vs XGBoost model selection and holdout evaluation
+5. Model evaluation and error analysis
+6. Model explainability with SHAP
+7. FastAPI deployment path
+8. Monitoring and data quality checks
+9. CI/CD automation
 
 ## Repository Structure
 
@@ -136,17 +135,17 @@ The repository includes a minimal FastAPI application as the starting point for 
 
 ## Current Status
 
-The EDA/data-cleaning notebook produces a documented processed dataset. Dedicated notebooks now cover logistic-regression baseline modeling, Optuna-tuned XGBoost modeling, PyTorch/CUDA TabFM zero-shot modeling, optional JAX TabFM experimentation, and cross-validated model selection. Notebook 05 has been run with the stronger TabFM `8 / 1 / 2048` settings.
+The project produces a documented processed dataset and includes historical experiments for logistic-regression baseline modeling, Optuna-tuned XGBoost modeling, TabFM benchmarking, and cross-validated model selection. The packaged MLOps workflow intentionally compares only logistic regression and XGBoost.
 
 ## Current Model Selection
 
-The current practical recommendation is to select the Optuna-tuned XGBoost model for the retention-targeting workflow. In notebook 05, PyTorch/CUDA TabFM had the strongest conventional predictive metrics with mean CV PR AUC 0.6971, holdout PR AUC 0.6781, and holdout ROC AUC 0.8599. XGBoost was very close predictively, with mean CV PR AUC 0.6932, holdout PR AUC 0.6725, and holdout ROC AUC 0.8559, but it produced the highest top-100 campaign expected net value: **$24,647.51** for XGBoost versus **$23,555.11** for logistic regression and **$16,017.86** for TabFM.
+The current practical recommendation is to select the Optuna-tuned XGBoost model for the retention-targeting workflow. In the project's historical model-selection experiment, PyTorch/CUDA TabFM had the strongest conventional predictive metrics with mean CV PR AUC 0.6971, holdout PR AUC 0.6781, and holdout ROC AUC 0.8599. XGBoost was very close predictively, with mean CV PR AUC 0.6932, holdout PR AUC 0.6725, and holdout ROC AUC 0.8559, but it produced the highest top-100 campaign expected net value: **$24,647.51** for XGBoost versus **$23,555.11** for logistic regression and **$16,017.86** for TabFM.
 
-This is not a contradiction: PR AUC and ROC AUC measure aggregate ranking quality, while the campaign calculation is value-weighted and cost-sensitive. TabFM selected a materially different top-100 target list, overlapping XGBoost on 75 customers, and that list was less valuable under the current churn-probability, retained-LTV, outreach-cost, offer-cost, offer-acceptance, and retention-uplift assumptions. TabFM also took substantially longer to run, especially in five-fold cross-validation, without improving the business objective. The expected-value comparison depends on the assumed retention uplift and offer-acceptance rate; validate those assumptions with a controlled campaign before production deployment.
+This is not a contradiction. TabFM, logistic regression, and XGBoost can all rank customers by churn risk, and TabFM ranked customers well on conventional metrics. The campaign objective adds another layer: customers are ranked by expected campaign value, which combines each model's churn probability with retained-LTV value and campaign costs. A model can have slightly better overall PR AUC while assigning probability scores that move different customers above or below the top-100 value cutoff. In this saved run, TabFM's top-100 campaign list overlapped XGBoost on 75 customers, but the 25 different choices had a lower combined churn-probability-and-value profile under the current outreach-cost, offer-cost, offer-acceptance, and retention-uplift assumptions. TabFM also took substantially longer to run, especially in five-fold cross-validation, without improving the business objective. The expected-value comparison depends on the assumed retention uplift and offer-acceptance rate; validate those assumptions with a controlled campaign before production deployment.
 
 ## Model Trade-Offs in This Project
 
-The three model families represent different practical choices. Logistic regression is the interpretable linear baseline, XGBoost is the tuned nonlinear tabular model, and TabFM is a pretrained tabular foundation model. In this churn project, the results favor XGBoost as the production candidate even though TabFM narrowly leads on several conventional predictive metrics.
+The packaged workflow compares two practical model families: logistic regression as the interpretable linear baseline and XGBoost as the tuned nonlinear tabular model. Historical project experiments also evaluated TabFM as a foundation-model benchmark, but TabFM is not part of the production-style training, serving, or monitoring workflow.
 
 | Dimension            | Logistic Regression                              | XGBoost                                  | TabFM                                                         |
 | -------------------- | ------------------------------------------------ | ---------------------------------------- | ------------------------------------------------------------- |
@@ -162,11 +161,11 @@ Logistic regression remains valuable because it is simple, auditable, and cheap 
 
 XGBoost is the best fit for the current business objective. It captures nonlinear patterns and interactions in the encoded churn features, runs efficiently, and produced the best top-100 expected net value at $24,647.51. Its main cost is complexity: it required Optuna tuning, and explanations should use post-hoc tools such as SHAP rather than raw coefficients. For this project, that trade-off is worthwhile because XGBoost is nearly tied with TabFM on holdout PR AUC while being faster, simpler to operate, and better aligned with the retention-value calculation.
 
-TabFM is useful as a modern foundation-model benchmark, but it did not become the practical winner here. With the stronger PyTorch/CUDA settings, it produced the best mean CV PR AUC and the best holdout PR AUC, ROC AUC, precision, accuracy, and F1. However, it took much longer to run and produced the lowest campaign expected net value at $16,017.86. This happened because the business objective is value-weighted: the top customers are selected by predicted churn probability multiplied by retained-LTV value, not by generic classification rank alone. TabFM chose a different top-100 list, and that list was less profitable under the current cost assumptions.
+TabFM is useful as a modern foundation-model benchmark, but it did not become the practical winner here. With the stronger PyTorch/CUDA settings, it produced the best mean CV PR AUC and the best holdout PR AUC, ROC AUC, precision, accuracy, and F1. However, it took much longer to run and produced the lowest campaign expected net value at $16,017.86. TabFM can rank prospects just like logistic regression and XGBoost; the issue is that the final campaign ranking was not based on churn probability alone. It used expected net value, roughly combining predicted churn probability, retained-LTV value, retention-uplift assumptions, and outreach/offer costs. TabFM's probability scores produced a different top-100 value-ranked list. Under the current cost and value assumptions, that list contained fewer high-value save opportunities than the XGBoost list, even though TabFM was slightly stronger on aggregate classification metrics.
 
 Some of TabFM's usual advantages were also not fully exercised in this project. TabFM can be attractive for rapid prototyping, cold-start tables, limited local labels, and tables with meaningful raw text fields. This churn workflow already had labels, a compact structured dataset, and a deliberate feature-engineering pipeline built for fair comparison with logistic regression and XGBoost. Because the project used encoded model-ready features rather than raw text-heavy tables, TabFM's foundation-model strengths had less room to shine.
 
-The practical rule from this project is: use logistic regression when interpretability is the deciding factor, use XGBoost for the current production-style retention workflow, and keep TabFM as a benchmark or exploratory option when zero-shot behavior, cold-start modeling, or text-rich tabular inputs are central to the problem.
+The practical rule for the packaged workflow is: use logistic regression when interpretability is the deciding factor, and use XGBoost for the current production-style retention workflow.
 
 ## Roadmap
 
@@ -216,6 +215,179 @@ Then open:
 ```text
 http://127.0.0.1:8000/health
 ```
+
+## Production-Oriented MLOps Extension
+
+This repository keeps the exploratory analysis as reference artifacts and extends the project logic into reusable Python modules under `src/churn_ml/`. The packaged workflow is the reproducible path for validation, preprocessing, training, model selection, serving, UI interaction, and local monitoring.
+
+```mermaid
+flowchart LR
+    A["Raw Data"] --> B["Validation"]
+    B --> C["Preprocessing"]
+    C --> D["Feature Engineering"]
+    D --> E["Training / MLflow Experiment Tracking"]
+    E --> F["Model Selection"]
+    F --> G["Persisted or Registered Model"]
+    G --> H["FastAPI Prediction API"]
+    H --> I["Streamlit UI"]
+    H --> J["Inference Logging / Drift Monitoring"]
+    E --> K["CI/CD"]
+```
+
+### Added Package Structure
+
+```text
+src/churn_ml/
+├── api/                 # FastAPI app, schemas, dependencies
+├── data/                # loading, validation, cleaning, preprocessing
+├── features/            # reusable feature engineering
+├── models/              # training, evaluation, selection, prediction helpers
+├── monitoring/          # JSONL inference logging and drift checks
+├── pipelines/           # end-to-end training and inference pipelines
+├── ui/                  # Streamlit API client
+└── utils/               # paths and logging helpers
+```
+
+The production-style pipeline preserves key project decisions: `Churn Value` is the binary target, churn-derived fields are excluded, `CustomerID` is not used as a feature, `Total Charges` blank values are handled safely, model selection uses PR AUC, and the default threshold follows the training churn rate before validation-based threshold tuning.
+
+### Training
+
+Activate the existing Conda environment and run the package pipeline from the repository root:
+
+```bash
+conda activate churn_ml_env001
+python scripts/run_training.py
+```
+
+Equivalent module command:
+
+```bash
+python -m churn_ml.pipelines.training_pipeline
+```
+
+The pipeline loads `data/raw/Telco_customer_churn.csv`, validates the raw schema, engineers leakage-safe features, creates stratified train/validation/test splits, compares logistic regression and XGBoost only, logs MLflow metrics when available, selects the best validation PR AUC model, tunes the threshold on validation data, evaluates once on the test split, and writes:
+
+```text
+artifacts/models/production_model.joblib
+artifacts/monitoring/training_baseline.parquet
+reports/metrics/model_comparison.csv
+reports/metrics/final_evaluation.json
+reports/figures/
+```
+
+### MLflow
+
+Training uses local MLflow tracking with:
+
+```text
+sqlite:///mlflow.db
+```
+
+Launch the tracking UI:
+
+```bash
+make mlflow
+```
+
+Then open `http://127.0.0.1:5000`.
+
+### FastAPI
+
+Train once first so `artifacts/models/production_model.joblib` exists, then run:
+
+```bash
+uvicorn churn_ml.api.main:app --reload
+```
+
+Endpoints:
+
+```text
+GET  /health
+GET  /model-info
+POST /predict
+```
+
+Interactive OpenAPI docs are available at `http://127.0.0.1:8000/docs`.
+
+### Streamlit UI
+
+On Windows PowerShell, start FastAPI and Streamlit together with:
+
+```powershell
+.\scripts\run_app.ps1
+```
+
+This opens FastAPI in a separate PowerShell window, waits for `/health`, then starts Streamlit on `http://localhost:8502` in the current window.
+
+The UI calls the FastAPI endpoint rather than loading the model directly. To run the services manually, start FastAPI first and then run:
+
+```bash
+streamlit run src/churn_ml/ui/app.py
+```
+
+Configure the API URL with:
+
+```bash
+CHURN_API_BASE_URL=http://127.0.0.1:8000
+```
+
+### Docker
+
+Build and run the API and UI together:
+
+```bash
+docker compose up --build
+```
+
+The API is exposed on `http://127.0.0.1:8000` and the UI on `http://127.0.0.1:8501`. Mounts expect a trained model artifact under `artifacts/models/`.
+
+### Testing, Linting, and CI
+
+Run local checks:
+
+```bash
+make lint
+make test
+```
+
+GitHub Actions runs dependency installation, Ruff linting, pytest, import validation, and a Docker image build on pushes and pull requests to `main`.
+
+### Monitoring
+
+FastAPI writes anonymized JSON Lines inference logs to:
+
+```text
+logs/inference.jsonl
+```
+
+Generate a local drift report against the saved training baseline:
+
+```bash
+python -m churn_ml.monitoring.drift_detection
+```
+
+This is a local monitoring foundation for demonstration and portfolio use. It is not a claim of real-time production monitoring.
+
+### Helpful Commands
+
+```bash
+make install
+make test
+make lint
+make train
+make api
+make ui
+make docker-up
+make drift
+```
+
+### Known Limitations
+
+- Historical TabFM experimentation remains available as reference context, but TabFM is not part of the packaged training/serving workflow.
+- The package pipeline compares only logistic regression and XGBoost.
+- MLflow model registry behavior is local and environment-dependent; the pipeline always persists a local production bundle.
+- Drift detection compares distributions only; it does not monitor labels, business outcomes, or real campaign lift.
+- FastAPI explanations are intentionally minimal until a stable model-explanation artifact is added.
 
 ## GPU Notes
 

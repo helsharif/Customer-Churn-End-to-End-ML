@@ -189,6 +189,9 @@ reports/metrics/*
 !reports/metrics/.gitkeep
 mlflow.db*
 mlruns/
+logs/
+artifacts/models/production_model.joblib
+artifacts/monitoring/
 artifacts/models/tabfm_checkpoint/
 artifacts/models/tabfm_pytorch_config.json
 

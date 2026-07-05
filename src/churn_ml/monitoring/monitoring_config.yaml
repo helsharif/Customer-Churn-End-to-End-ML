@@ -1,0 +1,14 @@
+inference_logging:
+  format: jsonl
+  path: logs/inference.jsonl
+  pii_policy: do_not_log_raw_customer_payloads
+
+drift_detection:
+  baseline_path: artifacts/monitoring/training_baseline.parquet
+  report_path: reports/metrics/drift_report.json
+  numeric_methods:
+    - psi
+    - ks_statistic
+  categorical_methods:
+    - category_frequency_shift
+  production_note: local demonstration monitoring, not real-time production monitoring

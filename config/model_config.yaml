@@ -1,0 +1,19 @@
+project:
+  name: telco_customer_churn
+  target_column: Churn Value
+  standardized_target_column: churn_value
+  primary_metric: pr_auc
+  threshold_policy: validation_f1_with_minimum_precision
+
+data:
+  raw_path: data/raw/Telco_customer_churn.csv
+  customer_id_column: CustomerID
+  test_size: 0.15
+  validation_size: 0.15
+  random_seed: 42
+
+models:
+  candidates:
+    - logistic_regression
+    - xgboost
+  production_artifact: artifacts/models/production_model.joblib

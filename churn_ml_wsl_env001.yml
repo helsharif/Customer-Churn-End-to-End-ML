@@ -15,10 +15,13 @@ dependencies:
   - fastapi
   - uvicorn
   - pydantic
+  - requests
+  - streamlit
   - shap
   - optuna
   - great-expectations
   - pytest
+  - ruff
   - python-dotenv
   - joblib
   - pyarrow
