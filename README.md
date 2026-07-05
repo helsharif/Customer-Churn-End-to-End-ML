@@ -167,6 +167,43 @@ Some of TabFM's usual advantages were also not fully exercised in this project. 
 
 The practical rule for the packaged workflow is: use logistic regression when interpretability is the deciding factor, and use XGBoost for the current production-style retention workflow.
 
+## Project Visuals
+
+The exploratory visuals below summarize feature relationships that informed the modeling workflow. Positive correlations indicate predictors associated with higher churn in the encoded modeling data, while negative correlations indicate predictors associated with retention.
+
+![Predictor correlation with churn](visuals/predictor-correlation-with-churn.png)
+
+The multicollinearity review was used to understand redundant predictors and guide the interpretable logistic-regression baseline. XGBoost can retain correlated predictors more comfortably because tree-based models are less sensitive to linear multicollinearity than logistic regression.
+
+![Predictor multicollinearity VIF](visuals/predictor-multi-collinearity.png)
+
+### Confusion Matrices
+
+The confusion matrices below are shown as markdown tables for readability. They use the historical 26.5% churn-rate threshold from the model-selection evidence. Rows are actual outcomes and columns are predicted outcomes.
+
+**Logistic Regression**
+
+| Actual outcome | Predicted: No Churn | Predicted: Churn |
+|---|---:|---:|
+| Churn | 27 | 347 |
+| No Churn | 566 | 469 |
+
+**XGBoost**
+
+| Actual outcome | Predicted: No Churn | Predicted: Churn |
+|---|---:|---:|
+| Churn | 20 | 354 |
+| No Churn | 556 | 479 |
+
+**TabFM Benchmark, Historical Reference Only**
+
+TabFM was evaluated as a foundation-model benchmark during project experimentation, but it is not part of the packaged training, serving, or monitoring workflow.
+
+| Actual outcome | Predicted: No Churn | Predicted: Churn |
+|---|---:|---:|
+| Churn | 77 | 297 |
+| No Churn | 778 | 257 |
+
 ## Roadmap
 
 - Complete EDA notebook with target distribution and feature summaries
@@ -318,6 +355,8 @@ On Windows PowerShell, start FastAPI and Streamlit together with:
 ```
 
 This opens FastAPI in a separate PowerShell window, waits for `/health`, then starts Streamlit on `http://localhost:8502` in the current window.
+
+![Streamlit churn prediction UI](visuals/telco-churn-streamlit-app-ui.png)
 
 The UI calls the FastAPI endpoint rather than loading the model directly. To run the services manually, start FastAPI first and then run:
 
