@@ -9,6 +9,13 @@ $ErrorActionPreference = "Stop"
 
 $ProjectRoot = Resolve-Path (Join-Path $PSScriptRoot "..")
 $ApiUrl = "http://${ApiHost}:${ApiPort}"
+$UiUrl = "http://localhost:$UiPort"
+
+Write-Host ""
+Write-Host "Telco Churn MLOps App Launcher" -ForegroundColor Cyan
+Write-Host "Project root: $ProjectRoot" -ForegroundColor DarkGray
+Write-Host "To close the app: press Ctrl+C in this Streamlit terminal, then close the FastAPI window." -ForegroundColor Yellow
+Write-Host ""
 
 function Test-ApiHealth {
     try {
@@ -21,10 +28,10 @@ function Test-ApiHealth {
 }
 
 if (Test-ApiHealth) {
-    Write-Host "FastAPI is already running at $ApiUrl."
+    Write-Host "FastAPI is already running at $ApiUrl." -ForegroundColor Green
 }
 else {
-    Write-Host "Starting FastAPI at $ApiUrl ..."
+    Write-Host "Starting FastAPI at $ApiUrl ..." -ForegroundColor Cyan
     $CondaCommand = Get-Command conda -ErrorAction Stop
     Start-Process -FilePath $CondaCommand.Source -WorkingDirectory $ProjectRoot -ArgumentList @(
         "run",
@@ -40,7 +47,7 @@ else {
     )
 }
 
-Write-Host "Waiting for FastAPI health check ..."
+Write-Host "Waiting for FastAPI health check ..." -ForegroundColor Yellow
 $deadline = (Get-Date).AddSeconds(30)
 $healthy = $false
 while ((Get-Date) -lt $deadline) {
@@ -54,7 +61,20 @@ while ((Get-Date) -lt $deadline) {
 if (-not $healthy) {
     Write-Warning "FastAPI did not respond within 30 seconds. Streamlit will still start, but predictions may fail until the API is ready."
 }
+else {
+    Write-Host "FastAPI health check passed: $ApiUrl/health" -ForegroundColor Green
+}
 
-Write-Host "Starting Streamlit at http://localhost:$UiPort ..."
+Write-Host ""
+Write-Host "Opening instructions" -ForegroundColor Cyan
+Write-Host "Streamlit UI: $UiUrl" -ForegroundColor Green
+Write-Host "FastAPI docs: $ApiUrl/docs" -ForegroundColor Green
+Write-Host "MLflow UI: run the MLflow command separately, then open http://localhost:5000" -ForegroundColor DarkGray
+Write-Host ""
+Write-Host "Closing instructions" -ForegroundColor Cyan
+Write-Host "1. Press Ctrl+C here to stop Streamlit." -ForegroundColor Yellow
+Write-Host "2. Close the FastAPI PowerShell window, or press Ctrl+C in that window." -ForegroundColor Yellow
+Write-Host ""
+Write-Host "Starting Streamlit at $UiUrl ..." -ForegroundColor Cyan
 Set-Location -LiteralPath $ProjectRoot
 conda run -n $CondaEnv python -m streamlit run "$ProjectRoot/src/churn_ml/ui/app.py" --server.port $UiPort
