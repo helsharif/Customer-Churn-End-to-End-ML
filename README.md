@@ -4,6 +4,8 @@
 
 A professional end-to-end machine learning project for predicting customer churn in a fictional telecommunications company. This repository is being built as a complete ML workflow, moving from exploratory analysis and baseline modeling toward deployment, monitoring, and CI/CD-ready MLOps practices.
 
+**Live demo:** [Hugging Face Space](https://huggingface.co/spaces/helsharif/telco-churn-prediction)
+
 ## Business Problem
 
 Customer churn reduces recurring revenue and increases acquisition costs. For a subscription-based telecom business, identifying customers who are likely to leave can help retention teams prioritize outreach, understand churn drivers, and design targeted interventions before customers cancel service.
