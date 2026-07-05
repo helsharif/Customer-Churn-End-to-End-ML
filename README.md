@@ -1,4 +1,6 @@
-# Customer Churn End-to-End ML
+# Telco Customer Churn Prediction & Retention Targeting System
+
+![Telco Customer Churn ML Workflow](visuals/Telco%20Customer%20Churn%20ML%20Workflow.png)
 
 A professional end-to-end machine learning project for predicting customer churn in a fictional telecommunications company. This repository is being built as a complete ML workflow, moving from exploratory analysis and baseline modeling toward deployment, monitoring, and CI/CD-ready MLOps practices.
 
@@ -378,7 +380,28 @@ Build and run the API and UI together:
 docker compose up --build
 ```
 
-The API is exposed on `http://127.0.0.1:8000` and the UI on `http://127.0.0.1:8501`. Mounts expect a trained model artifact under `artifacts/models/`.
+The API is exposed on `http://127.0.0.1:8000` and the UI on `http://127.0.0.1:8502`. Mounts expect a trained model artifact under `artifacts/models/`.
+
+### Hugging Face Spaces Deployment
+
+This project is prepared for Hugging Face Spaces using the Docker SDK. The container trains the production model artifact during image build, starts FastAPI internally on port `8000`, and exposes the Streamlit UI on port `7860`.
+
+Recommended Space settings:
+
+```text
+SDK: Docker
+App port: 7860
+```
+
+Deployment steps:
+
+1. Create a new Hugging Face Space.
+2. Select `Docker` as the SDK.
+3. Push this repository's files to the Space repository, including `Dockerfile`, `requirements-hf.txt`, `src/`, `scripts/`, `data/raw/`, `config/`, and `artifacts/models/xgboost_optuna_best_params.json`.
+4. Let the Space build the Docker image.
+5. Open the Space URL after the build completes.
+
+The Hugging Face image uses `requirements-hf.txt` rather than the full research environment so the hosted demo avoids unnecessary TabFM/PyTorch dependencies. The hosted app still preserves the full local architecture by running Streamlit against the FastAPI prediction endpoint inside the same container.
 
 ### Testing, Linting, and CI
 

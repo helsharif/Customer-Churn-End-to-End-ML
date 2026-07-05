@@ -1,0 +1,14 @@
+numpy
+pandas
+scipy
+scikit-learn
+matplotlib
+fastapi
+uvicorn
+pydantic
+requests
+streamlit
+python-dotenv
+joblib
+pyarrow
+xgboost

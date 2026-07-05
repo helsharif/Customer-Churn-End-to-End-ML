@@ -9,7 +9,10 @@ __pycache__
 mlruns
 mlflow.db*
 notebooks/.ipynb_checkpoints
-data/raw
+data/raw/*.xlsx
+data/raw/*.zip
 artifacts/models/tabfm_checkpoint
+artifacts/models/production_model.joblib
+artifacts/monitoring
 logs
 reports
